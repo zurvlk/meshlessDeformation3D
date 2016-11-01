@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		CEBB1BB61DBF0E9D00AE2C43 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEBB1BB51DBF0E9D00AE2C43 /* main.cpp */; };
+		CEBB1BC01DBF0EAD00AE2C43 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEBB1BBD1DBF0EAD00AE2C43 /* GLKit.framework */; };
+		CEBB1BC11DBF0EAD00AE2C43 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEBB1BBE1DBF0EAD00AE2C43 /* GLUT.framework */; };
+		CEBB1BC21DBF0EAD00AE2C43 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEBB1BBF1DBF0EAD00AE2C43 /* OpenGL.framework */; };
+		CEBB1BC41DBF198A00AE2C43 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEBB1BC31DBF198A00AE2C43 /* Cocoa.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +29,10 @@
 /* Begin PBXFileReference section */
 		CEBB1BB21DBF0E9D00AE2C43 /* meshlessDeformation3D */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = meshlessDeformation3D; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEBB1BB51DBF0E9D00AE2C43 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		CEBB1BBD1DBF0EAD00AE2C43 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
+		CEBB1BBE1DBF0EAD00AE2C43 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		CEBB1BBF1DBF0EAD00AE2C43 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		CEBB1BC31DBF198A00AE2C43 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +40,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CEBB1BC41DBF198A00AE2C43 /* Cocoa.framework in Frameworks */,
+				CEBB1BC01DBF0EAD00AE2C43 /* GLKit.framework in Frameworks */,
+				CEBB1BC11DBF0EAD00AE2C43 /* GLUT.framework in Frameworks */,
+				CEBB1BC21DBF0EAD00AE2C43 /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,6 +55,7 @@
 			children = (
 				CEBB1BB41DBF0E9D00AE2C43 /* meshlessDeformation3D */,
 				CEBB1BB31DBF0E9D00AE2C43 /* Products */,
+				CEBB1BBC1DBF0EAD00AE2C43 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,6 +73,17 @@
 				CEBB1BB51DBF0E9D00AE2C43 /* main.cpp */,
 			);
 			path = meshlessDeformation3D;
+			sourceTree = "<group>";
+		};
+		CEBB1BBC1DBF0EAD00AE2C43 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CEBB1BC31DBF198A00AE2C43 /* Cocoa.framework */,
+				CEBB1BBD1DBF0EAD00AE2C43 /* GLKit.framework */,
+				CEBB1BBE1DBF0EAD00AE2C43 /* GLUT.framework */,
+				CEBB1BBF1DBF0EAD00AE2C43 /* OpenGL.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -216,6 +240,7 @@
 		CEBB1BBA1DBF0E9D00AE2C43 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = /usr/local/include;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -223,6 +248,7 @@
 		CEBB1BBB1DBF0E9D00AE2C43 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = /usr/local/include;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

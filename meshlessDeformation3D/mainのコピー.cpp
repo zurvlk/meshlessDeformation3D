@@ -9,19 +9,18 @@
 
 //Win32用
 #ifdef _WIN32
-#include <windows.h>  //Windows APIを使う準備
-#include <glut.h>
+    #include <windows.h>  //Windows APIを使う準備
+    #include <glut.h>
 #endif
 
 //Mac OS用
 #ifdef __APPLE__
-#include <unistd.h>
-#include <stdlib.h>
-#include <GLUT/GLUT.h>  // OpenGLを使う準備
+    #include <unistd.h>
+    #include <stdlib.h>
+    #include <GLUT/GLUT.h>  // OpenGLを使う準備
 #endif
 
 #include <iostream>
-#include <numeric>
 #include <vector>  // vector（便利な配列）を使う準備
 #include <fstream>  // ファイルを扱う準備
 
@@ -45,11 +44,11 @@ double zNear = 1,
 zFar = 256;  // カメラからの距離がzNearとzFarの間のものが描かれる
 //UWORD型からunsignd long型に変更
 #ifdef __APPLE__
-unsigned long prevTime = 0;  // 前回の時刻
+    unsigned long prevTime = 0;  // 前回の時刻
 #endif
 
 #ifdef _WIN32
-UWORD prevTime = 0;
+    UWORD prevTime = 0;
 #endif
 
 int oldX = -1, oldY,  // 前回のマウスの位置の保存
@@ -181,7 +180,6 @@ vector<T> operator*(const vector<T>& v, const U& w){  // vector（配列）の�
     return o;
 }
 
-
 template <class T>
 T sum(vector<T>& v){  // vector（配列）の合計値を求める
     return accumulate(v.begin() + 1, v.end(), v[0]);
@@ -204,60 +202,33 @@ T max_element(vector<T>& v){  // vector（配列）中の最大値を見つけ�
 
 
 //以下meshlessDeformation2Dからの移植部分、型、クラス指定など未実装の為保留
-// ------------------------------------------------------------
-// 衝突判定と衝撃力の作用
-//
+/*
 // ------------------------------------------------------------
 // 直線の軌跡と頂点の軌跡（線分）の衝突判定のための関数の定義
 //
-
 class intersection{
 public:
-    //intersection内、vecter及びmatrixの次元は統一する必要有
-    //s,e,mの3点で平面を作る
-    Vector3d s0, s1;    // 線分の始点の軌跡の端点
-    Vector3d e0, e1;    // 線分の終点の軌跡の端点
+    Vector2d s0, s1;    // 線分の始点の軌跡の端点
+    Vector2d e0, e1;    // 線分の終点の軌跡の端点
+    Vector2d p0, p1;    // 頂点の軌跡の端点
+    Matrix2d rotation;  // 回転行列
     
-    //平面にぶつかる点
-    Vector3d p0, p1;    // 頂点の軌跡の端点
-    
-    Matrix3d rotation;  // 回転行列
-    
-    intersection(Vector3d& s0_, Vector3d& s1_, Vector3d& e0_, Vector3d& e1_, Vector3d& p0_, Vector3d& p1_)
+    intersection(Vector2d& s0_, Vector2d& s1_, Vector2d& e0_, Vector2d& e1_,
+                 Vector2d& p0_, Vector2d& p1_)
     : s0(s0_), s1(s1_), e0(e0_), e1(e1_), p0(p0_), p1(p1_)
     {
-        rotation << 0, -1, 0, 1, 0, 0, 0, 0, 1;
-        // z軸を中心に90度回転
-        /*
-        rotation << 1, 0, 0, 0, 0, -1, 0, 1, 0;
-        // x軸を中心に90度回転
-        rotation << 0, 0, 1, 0, 1, 0, -1, 0, 0;
-        // y軸を中心に90度回転
-        */
-        //場合によって上記3つの行列を使い分ける
+        rotation << 0, -1, 1, 0;  // 2次元ベクトルを90度回転させる行列
     }
     
+    // 関数f
     double f(double t){
-        Vector3d s, e, m, p;
-        Vector3d se, sm, sp, ga;
-        
+        Vector2d s, e, p;
         s = s0 + (s1 - s0) * t;  // 線分の始点のt時点での位置
         e = e0 + (e1 - e0) * t;  // 線分の終点のt時点での位置
         p = p0 + (p1 - p0) * t;  // 頂点のt時点での位置
         
-        //return (rotation * (e - s)).dot(p - s); //.dotって何　←　ベクトルの乗算？
-        // この値が0の時、sとeが作る直線と頂点pは衝突してい
-        
-        //ベクトルの外積ってどうやって計算するんだ．
-        se = e - s; sm = m - s;
-        ga[0] = se[1] * sm[2] - se[2] * sm[1]; //法線ベクトルのx座標
-        ga[1] = se[2] * sm[0] - se[0] * sm[2]; //y座標
-        ga[2] = se[0] * sm[1] - se[1] * sm[0]; //z座標
-        
-        sp = p - s; //pが平面上にきたときの座標のつもり
-        
-        //gaとspの内積が0のときのtがpが平面上にきたとき(衝突したとき)の時刻ってことじゃないですかね
-        return ga[0] * sp[0] + ga[1] * sp[1] + ga[2] * sp[2];
+        return (rotation * (e - s)).dot(p - s);
+        // この値が0の時、sとeが作る直線と頂点pは衝突している
     }
     
     // 関数fの微分を中心差分で求める
@@ -269,55 +240,42 @@ public:
 // ------------------------------------------------------------
 // 衝突判定と衝撃力の作用
 //
-
-
 int collision(mesh& A, mesh& B){
     for (int a = 0; a < A.vertices.size(); a++){
         Vector3d& velocity = A.velocities[a];
-        Vector3d p0 = A.vertices[a], p1 = p0 + velocity;  // 頂点の軌跡の端点
+        Vector2d p0 = A.vertices[a], p1 = p0 + velocity;  // 頂点の軌跡の端点
         
         // 頂点の軌跡を囲うbounding box
+        Vector4d bbA(min(p0[0], p1[0]), min(p0[1], p1[1]), max(p0[0], p1[0]),
+                     max(p0[1], p1[1]));
         
-        
-        
-        vector<double> bbA{min(p0[0], p1[0]), min(p0[1], p1[1]), min(p0[2], p1[2]),
-                           max(p0[0], p1[0]), max(p0[1], p1[1]), max(p0[2], p1[2])};
-
         for (int b = 0; b < B.vertices.size(); b++){
             Vector3d& v0 = B.velocities[b];
             Vector3d& v1 = B.velocities[(b + 1) % B.velocities.size()];
             
             // 線分の始点の軌跡の端点
-            Vector3d s0 = B.vertices[b], s1 = s0 + v0;
+            Vector2d s0 = B.vertices[b], s1 = s0 + v0;
             
             // 線分の終点の軌跡の端点
-            Vector3d e0 = B.vertices[(b + 1) % B.vertices.size()], e1 = e0 + v1;
+            Vector2d e0 = B.vertices[(b + 1) % B.vertices.size()], e1 = e0 + v1;
             
             // 線分の軌跡を囲うbounding box
-            vector<double> X(4), Y(4), Z(4);
+            vector<double> X(4), Y(4);
             X[0] = s0[0];
             X[1] = s1[0];
             X[2] = e0[0];
             X[3] = e1[0];
-            
             Y[0] = s0[1];
             Y[1] = s1[1];
             Y[2] = e0[1];
             Y[3] = e1[1];
-            
-            Z[0] = s0[2];
-            Z[1] = s1[2];
-            Z[2] = e0[2];
-            Z[3] = e1[2];
-
-            
-            vector<double> bbB{min_element(X), min_element(Y), min_element(Z),
-                               max_element(X), max_element(Y), max_element(Z)};
+            Vector4d bbB(min_element(X), min_element(Y), max_element(X),
+                         max_element(Y));
             
 #if 1
             // bounding box同士の衝突判定
-            if (bbA[0] <= bbB[4] && bbB[0] <= bbA[3] && bbA[1] <= bbB[4] &&
-                bbB[1] <= bbA[4] && bbA[2] <= bbB[5] && bbB[2] <= bbA[5])
+            if (bbA[0] <= bbB[2] && bbB[0] <= bbA[2] && bbA[1] <= bbB[3] &&
+                bbB[1] <= bbA[3])
 #endif
             {
                 intersection detector(s0, s1, e0, e1, p0, p1);
@@ -328,7 +286,7 @@ int collision(mesh& A, mesh& B){
                 for (int l = 0; l < 20; l++){
                     double y = detector.f(t);
                     
-                    // yがほぼ0になったらtが求まったとする
+                      // yがほぼ0になったらtが求まったとする
                     if (y * y < 1e-20){
                         // 0 <= t <= 1なら衝突
                         // （数値計算の誤差を考慮し、後ろのみに1%の余裕を与える）
@@ -375,22 +333,21 @@ int collision(mesh& A, mesh& B){
     
     return 0;
 }
-/*
+
 // ------------------------------------------------------------
 // Meshless deformation (論文の3.2〜3.3章を参照)
 //
 // currentに最もフィットするようにrestを回転＆平行移動したものをgoalに求める
 //
-
-vector<Vector3d> computeGoalPositions(mesh& current, mesh& rest){
-    Vector3d xcm = mean(current.vertices), x0cm = mean(rest.vertices);
+vector<Vector2d> computeGoalPositions(mesh& current, mesh& rest){
+    Vector2d xcm = mean(current.vertices), x0cm = mean(rest.vertices);
     
     vector<Vector3d> p = current.vertices - xcm, q = rest.vertices - x0cm;
     
     Matrix2d A = Matrix2d::Zero();
     for (int i = 0; i < p.size(); i++) A += p[i] * q[i].transpose();
     
-    JacobiSVD<Matrix3d> svd(A.transpose() * A,
+    JacobiSVD<Matrix2d> svd(A.transpose() * A,
                             Eigen::ComputeFullU | Eigen::ComputeFullV);
     
     Matrix2d D = svd.singularValues().asDiagonal();
@@ -399,12 +356,13 @@ vector<Vector3d> computeGoalPositions(mesh& current, mesh& rest){
     
     Matrix2d R = A * S.inverse();
     
-    vector<Vector3d> goal;
+    vector<Vector2d> goal;
     for (int i = 0; i < q.size(); i++) goal.push_back(R * q[i] + xcm);
     
     return goal;
 }
- */
+
+*/
 
 // ------------------------------------------------------------
 // 描画処理を行う関数（繰り返し呼ばれ続ける）
@@ -496,11 +454,11 @@ void display(){
     
     glutSwapBuffers();
     
-#ifdef _WIN32
-    // 20ミリ秒間のウェイト
-    while (timeGetTime() < prevTime + 20) _sleep(1000);
-    prevTime = timeGetTime();
-#endif
+    #ifdef _WIN32
+        // 20ミリ秒間のウェイト
+        while (timeGetTime() < prevTime + 20) _sleep(1000);
+        prevTime = timeGetTime();
+    #endif
     
     glutPostRedisplay();  // 再描画
 }
@@ -664,7 +622,7 @@ int main(int argc, char* argv[]){
     for (int i = 0; i < meshes.size(); i++)
         meshes[i].velocities.resize(meshes[i].vertices.size(),
                                     Vector3d(0, 0, 0));
-    
+  
     // サイズの調整
     meshes[1].vertices = meshes[1].vertices * 2.0;
     meshes[2].vertices = meshes[2].vertices * 0.5;
