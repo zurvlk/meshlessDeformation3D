@@ -1,4 +1,3 @@
-//
 //  main.cpp
 //  meshlessDeformation3D
 //
@@ -9,7 +8,7 @@
 
 //Win32用
 #ifdef _WIN32
-#include <windows.h>  //Windows APIを使う準備
+#include <Windows.h>  //Windows APIを使う準備
 #include <glut.h>
 #endif
 
@@ -20,6 +19,7 @@
 #include <GLUT/GLUT.h>  // OpenGLを使う準備
 #endif
 
+#include <stdio.h>
 #include <iostream>
 #include <numeric>
 #include <vector>  // vector（便利な配列）を使う準備
@@ -42,21 +42,13 @@ litUp(0, 1, 0);  // 照明の姿勢（位置、注視点、上方向）
 int screenWidth = 1024, screenHeight = 768;  // 画面サイズ
 double distanceToScreen = 2;                 // スクリーンまでの距離
 double zNear = 1,
-       zFar = 256;  // カメラからの距離がzNearとzFarの間のものが描かれる
-
-
-//UWORD型からunsignd long型に変更
-#ifdef __APPLE__
-unsigned long prevTime = 0;  // 前回の時刻
-#endif
-
+zFar = 256;  // カメラからの距離がzNearとzFarの間のものが描かれる
 #ifdef _WIN32
-DWORD prevTime = 0;
+DWORD prevTime = 0;  // 前回の時刻
 #endif
 
 int oldX = -1, oldY,  // 前回のマウスの位置の保存
-    litMode = 0;      // 照明を操作中かどうかのフラグ
-
+litMode = 0;      // 照明を操作中かどうかのフラグ
 
 // ------------------------------------------------------------
 // メッシュクラスの定義
@@ -87,7 +79,8 @@ public:
     }
     
     // 文字列（input）を文字（splitter）で分割する
-    vector<string> split(const string& input, char splitter, bool bRemoveEmptyEntries){
+    vector<string> split(const string& input, char splitter,
+                         bool bRemoveEmptyEntries){
         stringstream s(input);
         string t;
         vector<string> output;
@@ -96,6 +89,8 @@ public:
         
         return output;
     }
+    
+    // メッシュをファイルから読み込む
     void loadObj(const string& fileName){
         vertices.clear();
         velocities.clear();
@@ -124,9 +119,8 @@ public:
                 texCoords.push_back(
                                     Vector2d(atof(t[1].c_str()), atof(t[2].c_str())));
             
-            if (t[0] == "f"){  //三角形
+            if (t[0] == "f"){
                 vector<Vector3i> f(t.size() - 1);
-                
                 for (int j = 0; j < f.size(); j++){
                     vector<string> u = split(t[j + 1], '/', false);
                     for (int k = 0; k < u.size(); k++)
@@ -135,7 +129,7 @@ public:
                 faces.push_back(f);
             }
         }
-        printf("Loaded %d faces\n", (int)faces.size());
+        cout << "Loaded " << (int)faces.size() << " faces" << endl;
     }
 };
 
@@ -149,7 +143,8 @@ vector<mesh> rests;   // 初期形状を保持（その後は一切更新され�
 // vectorに関する演算の定義 (meshlessDeformation2Dに同じ)
 //
 template <class T>
-vector<T>& operator+=(vector<T>& v, const vector<T>& w){  // vector（配列）同士の足し算
+vector<T>& operator+=(vector<T>& v,
+                      const vector<T>& w){  // vector（配列）同士の足し算
     for (int i = 0; i < v.size(); i++) v[i] += w[i];
     return v;
 }
@@ -181,7 +176,6 @@ vector<T> operator*(const vector<T>& v, const U& w){  // vector（配列）の�
     return o;
 }
 
-
 template <class T>
 T sum(vector<T>& v){  // vector（配列）の合計値を求める
     return accumulate(v.begin() + 1, v.end(), v[0]);
@@ -202,8 +196,6 @@ T max_element(vector<T>& v){  // vector（配列）中の最大値を見つけ�
     return *max_element(v.begin(), v.end());
 }
 
-
-//以下meshlessDeformation2Dからの移植部分、型、クラス指定など未実装の為保留
 // ------------------------------------------------------------
 // 衝突判定と衝撃力の作用
 //
@@ -211,7 +203,7 @@ T max_element(vector<T>& v){  // vector（配列）中の最大値を見つけ�
 // 直線の軌跡と頂点の軌跡（線分）の衝突判定のための関数の定義
 //
 
-class intersection{
+class intersection {
 public:
     //intersection内、vecter及びmatrixの次元は統一する必要有
     //vertA, vertB, vertCで平面を作成
@@ -226,68 +218,60 @@ public:
     Matrix3d rotation;  // 回転行列
     
     intersection(Vector3d& vertA0_, Vector3d& vertA1_, Vector3d& vertB0_, Vector3d& vertB1_, Vector3d& vertC0_, Vector3d& vertC1_, Vector3d& p0_, Vector3d& p1_)
-    : vertA0(vertA0_), vertA1(vertA1_), vertB0(vertB0_), vertB1(vertB1_), vertC0(vertC0_), vertC1(vertC1_), p0(p0_), p1(p1_)
-    {
+    : vertA0(vertA0_), vertA1(vertA1_), vertB0(vertB0_), vertB1(vertB1_), vertC0(vertC0_), vertC1(vertC1_), p0(p0_), p1(p1_){
         rotation << 0, -1, 0, 1, 0, 0, 0, 0, 1;
         // z軸を中心に90度回転
-        /*
-        rotation << 1, 0, 0, 0, 0, -1, 0, 1, 0;
+        //rotation << 1, 0, 0, 0, 0, -1, 0, 1, 0;
         // x軸を中心に90度回転
-        rotation << 0, 0, 1, 0, 1, 0, -1, 0, 0;
+        //rotation << 0, 0, 1, 0, 1, 0, -1, 0, 0;
         // y軸を中心に90度回転
-        */
-        //場合によって上記3つの行列を使い分ける？
     }
     
-    double f(double t){
+    double f(double t) {
         Vector3d vertA, vertB, vertC, p;
         Vector3d ab, ac, ap, n;
-
+        
         //vertA, vertB, vertCにおけるt時点での位置
         vertA = vertA0 + (vertA1 - vertA0) * t;
         vertB = vertB0 + (vertB1 - vertB0) * t;
         vertC = vertC0 + (vertC1 - vertC0) * t;
-
+        
         p = p0 + (p1 - p0) * t;  // 頂点のt時点での位置
         
         ab = vertB - vertA;
         ac = vertC - vertA;
         
         //法線ベクトル
-        n[0] = ab[1] * ac[2] - ab[2] * ac[1]; //x座標
-        n[1] = ab[2] * ac[0] - ab[0] * ac[2]; //y座標
-        n[2] = ab[0] * ac[1] - ab[1] * ac[0]; //z座標
+        n = ab.cross(ac);
         
-        ap = p - vertA; //pが平面上にきたときの座標
+        //pが平面上にきたときの座標
+        ap = p - vertA;
         
         //gaとspの内積が0のときのtがpが平面上にきたとき(衝突したとき)
         return n[0] * ap[0] + n[1] * ap[1] + n[2] * ap[2];
     }
     
     // 関数fの微分を中心差分で求める
-    double gradient(double x, double h){
+    double gradient(double x, double h) {
         return (f(x + h) - f(x - h)) / (h * 2);
     }
-     
-     
 };
 
 // ------------------------------------------------------------
 // 衝突判定と衝撃力の作用
 //
 
-int collision(mesh& A, mesh& B){
-    for (int a = 0; a < A.vertices.size(); a++){
-        Vector3d& velocity = A.velocities[a];
+int collision(mesh& A, mesh& B) {
+    for (int a = 0; a < A.vertices.size(); a++) {
+        Vector3d& velocity = A.velocities[a];   //物体の各頂点の速度
         Vector3d p0 = A.vertices[a], p1 = p0 + velocity;  // 頂点の軌跡の端点
         
         // 頂点の軌跡を囲うbounding box
         // bbA = {minX, minY, minZ, maxX, maxY, maxZ}
-        vector<double> bbA{min(p0[0], p1[0]), min(p0[1], p1[1]), min(p0[2], p1[2]),
-                           max(p0[0], p1[0]), max(p0[1], p1[1]), max(p0[2], p1[2])};
-
+        vector<double> bbA{ min(p0[0], p1[0]), min(p0[1], p1[1]), min(p0[2], p1[2]),
+            max(p0[0], p1[0]), max(p0[1], p1[1]), max(p0[2], p1[2]) };
         
-        for (int b = 0; b < B.vertices.size(); b++){
+        for (int b = 0; b < B.vertices.size(); b++) {
             Vector3d& v0 = B.velocities[b];
             Vector3d& v1 = B.velocities[(b + 1) % B.velocities.size()];
             Vector3d& v2 = B.velocities[(b + 2) % B.velocities.size()];
@@ -321,36 +305,36 @@ int collision(mesh& A, mesh& B){
             Z[3] = vertB1[2];
             Z[4] = vertC0[2];
             Z[5] = vertC1[2];
-
-
-            vector<double> bbB{min_element(X), min_element(Y), min_element(Z),
-                               max_element(X), max_element(Y), max_element(Z)};
-
+            
+            vector<double> bbB{ min_element(X), min_element(Y), min_element(Z),
+                max_element(X), max_element(Y), max_element(Z) };
             
 #if 1
             // bounding box同士の衝突判定
+            
             if (bbA[0] <= bbB[3] && bbB[0] <= bbA[3] && bbA[1] <= bbB[4] &&
                 bbB[1] <= bbA[4] && bbA[2] <= bbB[5] && bbB[2] <= bbA[5])
 #endif
             {
-                cout << "collision bounding box!!" << endl;
+                
+                
                 intersection detector(vertA0, vertA1, vertB0, vertB1, vertC0, vertC1, p0, p1);
                 
                 // ニュートン法を用いて、f(t)=0、となるtを求める
                 double t = 0.5;
                 
                 // ニュートン法での繰り返しは20回
-                for (int l = 0; l < 20; l++){
+                for (int l = 0; l < 20; l++) {
                     double y = detector.f(t);
                     t -= y / detector.gradient(t, 0.01);
                     
                     
                     // yがほぼ0になったらtが求まったとする
-                    if (y * y < 1e-20){
+                    if (y * y < 1e-20) {
                         
                         // 0 <= t <= 1なら衝突
                         // （数値計算の誤差を考慮し、後ろのみに1%の余裕を与える）
-                        if (0 <= t && t <= 1.01){
+                        if (0 <= t && t <= 1.01) {
                             Vector3d vertA, vertB, vertC, p;
                             
                             //vertA, vertB, vertCにおけるt時点での位置
@@ -363,32 +347,29 @@ int collision(mesh& A, mesh& B){
                             Vector3d ab = vertB - vertA, ac = vertC - vertA, bc = vertC - vertA, ca = vertA - vertC;
                             Vector3d ap = p - vertA, bp = p - vertB, cp = p - vertC;
                             Vector3d cross;
-
+                            
                             cross[0] = ab[1] * bp[2] - ab[2] * bp[1]; //ABとBpの外積
                             cross[1] = bc[2] * cp[0] - bc[0] * cp[2]; //BCとCpの外積
                             cross[2] = ca[0] * ap[1] - ca[1] * ap[0]; //CAとApの外積
                             
                             //外積の向きが全て同方向の場合
-                            if((cross[0] <= 0 && cross[1] <= 0 && cross[2] <= 0) || (cross[0] > 0 && cross[1] > 0 && cross[2] > 0)){
-
+                            if ((cross[0] <= 0 && cross[1] <= 0 && cross[2] <= 0) || (cross[0] > 0 && cross[1] > 0 && cross[2] > 0)) {
                                 Vector3d n;
                                 ab.normalize(), ac.normalize();;
                                 
                                 //法線ベクトル
-                                n[0] = ab[1] * ac[2] - ab[2] * ac[1]; //x座標
-                                n[1] = ab[2] * ac[0] - ab[0] * ac[2]; //y座標
-                                n[2] = ab[0] * ac[1] - ab[1] * ac[0]; //z座標
-                                
+                                n = ab.cross(ac);
                                 //平面側固定時の判定
-                                if(B.fixed){
+                                if (B.fixed) {
                                     velocity -= n * velocity.dot(n) * 5;  // 法線方向に跳ね返す
-                                }else{
+                                }
+                                else {
                                     Vector3d v = velocity;
                                     velocity += n * n.dot((v0 + v1 + v2) / 3) - n * v.dot(n);
                                     
-                                    v0 += n * n.dot(v) - n * v0.dot(n);
+                                    v0 += n * n.dot(v) - n * v1.dot(n);
                                     v1 += n * n.dot(v) - n * v1.dot(n);
-                                    v2 += n * n.dot(v) - n * v2.dot(n);
+                                    v2 += n * n.dot(v) - n * v1.dot(n);
                                 }
                                 return 1;
                             }
@@ -401,13 +382,11 @@ int collision(mesh& A, mesh& B){
     return 0;
 }
 
-
 // ------------------------------------------------------------
 // Meshless deformation (論文の3.2〜3.3章を参照)
 //
 // currentに最もフィットするようにrestを回転＆平行移動したものをgoalに求める
 //
-
 vector<Vector3d> computeGoalPositions(mesh& current, mesh& rest){
     //最初に全部2dを3dに変えた
     
@@ -433,19 +412,65 @@ vector<Vector3d> computeGoalPositions(mesh& current, mesh& rest){
     return goal;
 }
 
-
 // ------------------------------------------------------------
 // 描画処理を行う関数（繰り返し呼ばれ続ける）
 //
 void display(){
-    cout << "Start Drawing" << endl;
 #if 1
     // ------------------------------------------------------------
     // 重力の作用
     //
-    for (int i = 0; i < meshes.size(); i++){
+    for (int i = 0; i < meshes.size(); i++)
         if (!meshes[i].fixed)
-            meshes[i].velocities += Vector3d(0, -0.001, 0);  // 重力加速度を-0.001とする
+            meshes[i].velocities +=
+            Vector3d(0, -0.001, 0);  // 重力加速度を-0.001とする
+#endif
+    
+    
+#if 1
+    // ------------------------------------------------------------
+    // Meshless deformation
+    //
+    // 現時点の形状(temporary)に合わせて初期形状(rests[i])を
+    // フィットさせたものをgoalとし、mesh[i]の形状が
+    // goalに戻るように各頂点に力を掛ける
+    //
+    for (int i = 0; i < meshes.size(); i++){
+        mesh temporary = meshes[i];
+        
+        temporary.vertices += temporary.velocities;  // 現時点の速度で頂点を更新
+        
+        // temporaryに最もフィットするようにrests[i]を回転＆平行移動したものをgoalに求める
+        vector<Vector3d> goal = computeGoalPositions(temporary, rests[i]);
+        
+        meshes[i].velocities += (goal - temporary.vertices) * 1.0;
+        // 1.0は論文中のalpha（物体の柔らかさのパラメータ）に相当
+    }
+#endif
+    
+#if 1
+    // ------------------------------------------------------------
+    // 衝突判定と衝撃力の作用
+    //
+    // 全ての衝突が解消されるまで、衝突している頂点の速度の修正を繰り返す
+    //
+    int collided = 1;
+    while (collided){
+        collided = 0;
+        for (int i = 0; i < meshes.size(); i++)
+            if (!meshes[i].fixed){
+                for (int j = 0; j < meshes.size(); j++){
+                    if (i != j){
+                        // meshes[i]とmeshes[j]の衝突を検査
+                        collided = collision(meshes[i], meshes[j]);
+                        
+                        if (collided)
+                            break;  // 衝突があったので、初めから再検査
+                    }
+                }
+                
+                if (collided) break;  // 衝突があったので、初めから再検査
+            }
     }
 #endif
     
@@ -502,11 +527,13 @@ void display(){
     
     // メッシュの三角形を描画
     glBegin(GL_TRIANGLES);
-    for (int i = 0; i < meshes.size() ; i++)
-        for (int j = 0; j < meshes[i].faces.size(); j++){
+    for (int i = 0; i < meshes.size(); i++)
+        for (int j = 0; j < meshes[i].faces.size(); j++)
+        {
             vector<Vector3i>& f = meshes[i].faces[j];
             
-            for (int k = 0; k < f.size(); k++){
+            for (int k = 0; k < f.size(); k++)
+            {
                 glNormal3dv(&meshes[i].normals[f[k][2]][0]);
                 glVertex3dv(&meshes[i].vertices[f[k][0]][0]);
             }
@@ -523,11 +550,9 @@ void display(){
     
     glFinish();  // OpenGL関係の全ての処理の完了を待つ
     
-    glutSwapBuffers();
-    
-#ifdef _WIN32
     // 20ミリ秒間のウェイト
-    while (timeGetTime() < prevTime + 20) _sleep(1000);
+#ifdef _WIN32
+    while (timeGetTime() < prevTime + 20) Sleep(1);
     prevTime = timeGetTime();
 #endif
     
@@ -544,6 +569,7 @@ void mouse(int b, int s, int x, int y){
         
         litMode = (b == GLUT_LEFT_BUTTON);
     }
+    
     if (s == GLUT_UP) oldX = -1;
 }
 
@@ -612,9 +638,6 @@ void motion(int x, int y){
 // メイン関数（ここからプログラムの実行が始まる）
 //
 int main(int argc, char* argv[]){
-    
-    
-    
     meshes.resize(4);
     
     // 立方体
@@ -672,12 +695,11 @@ int main(int argc, char* argv[]){
     meshes[0].faces[11][1] = Vector3i(0, 0, 5);
     meshes[0].faces[11][2] = Vector3i(2, 0, 5);
     
-    
     // 大きな球を読み込み
-    meshes[1].loadObj("/Users/user/sphere.obj");
+    meshes[1].loadObj("sphere.obj");
     
     // 小さな球を読み込み
-    meshes[2].loadObj("/Users/user/sphere.obj");
+    meshes[2].loadObj("sphere.obj");
     
     // 外周の壁となる立方体 (meshes[0]を拡大し、全三角形を裏返す)
     meshes[3].vertices = meshes[0].vertices * 8;
@@ -688,6 +710,8 @@ int main(int argc, char* argv[]){
             // 三角形を裏返す（頂点の並びを逆順にする）
             meshes[3].faces[i][j] = meshes[0].faces[i][2 - j];
     meshes[3].fixed = 1;
+    
+    rests = meshes;
     
     // 全メッシュの速度の初期化
     for (int i = 0; i < meshes.size(); i++)
@@ -703,11 +727,16 @@ int main(int argc, char* argv[]){
     meshes[1].vertices += Vector3d(3, 5, 1);
     meshes[2].vertices += Vector3d(-4, 5, -3);
     
-    cout << "Start Drawing" << endl;
-    
     glutInit(&argc, argv);
     
+#ifdef _WIN32
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
+#endif
+    
+#ifdef _APPLE_
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+#endif
+    
     glutInitWindowPosition(100, 0);
     glutInitWindowSize(screenWidth, screenHeight);
     glutCreateWindow("Meshless deformation");
