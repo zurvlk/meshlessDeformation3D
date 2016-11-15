@@ -6,6 +6,9 @@
 //
 //Windows:glut.h MacOS:GLUT/GLUT.h
 
+//Windows Server 2008r2 + visual c++　動作確認済
+//OSX Sierra バグ有動作せず
+
 //Win32用
 #ifdef _WIN32
 #include <Windows.h>  //Windows APIを使う準備
@@ -53,7 +56,7 @@ litMode = 0;      // 照明を操作中かどうかのフラグ
 // ------------------------------------------------------------
 // メッシュクラスの定義
 //
-class mesh{
+class mesh {
 public:
     vector<Vector3d> vertices;    // メッシュの全頂点の集合
     vector<Vector3d> velocities;  // 対応する速度
@@ -69,7 +72,7 @@ public:
     //     2: テクスチャ座標
     
     // テキストファイルの全行を読み込む
-    vector<string> readAllLines(const string& fileName){
+    vector<string> readAllLines(const string& fileName) {
         ifstream i(fileName);
         string t;
         vector<string> output;
@@ -80,7 +83,7 @@ public:
     
     // 文字列（input）を文字（splitter）で分割する
     vector<string> split(const string& input, char splitter,
-                         bool bRemoveEmptyEntries){
+                         bool bRemoveEmptyEntries) {
         stringstream s(input);
         string t;
         vector<string> output;
@@ -91,7 +94,7 @@ public:
     }
     
     // メッシュをファイルから読み込む
-    void loadObj(const string& fileName){
+    void loadObj(const string& fileName) {
         vertices.clear();
         velocities.clear();
         normals.clear();
@@ -101,7 +104,7 @@ public:
         vector<string> lines =
         readAllLines(fileName);  // テキストファイルの全行を読み込む
         
-        for (int i = 0; i < lines.size(); i++){
+        for (int i = 0; i < lines.size(); i++) {
             vector<string> t = split(lines[i], ' ', true);
             if (!t.size()) continue;
             
@@ -119,9 +122,9 @@ public:
                 texCoords.push_back(
                                     Vector2d(atof(t[1].c_str()), atof(t[2].c_str())));
             
-            if (t[0] == "f"){
+            if (t[0] == "f") {
                 vector<Vector3i> f(t.size() - 1);
-                for (int j = 0; j < f.size(); j++){
+                for (int j = 0; j < f.size(); j++) {
                     vector<string> u = split(t[j + 1], '/', false);
                     for (int k = 0; k < u.size(); k++)
                         f[j][k] = atoi(u[k].c_str()) - 1;
@@ -144,55 +147,55 @@ vector<mesh> rests;   // 初期形状を保持（その後は一切更新され�
 //
 template <class T>
 vector<T>& operator+=(vector<T>& v,
-                      const vector<T>& w){  // vector（配列）同士の足し算
+                      const vector<T>& w) {  // vector（配列）同士の足し算
     for (int i = 0; i < v.size(); i++) v[i] += w[i];
     return v;
 }
 
 template <class T, class U>
-vector<T>& operator+=(vector<T>& v, const U& w){  // vector（配列）の各要素と何かの足し算
+vector<T>& operator+=(vector<T>& v, const U& w) {  // vector（配列）の各要素と何かの足し算
     for (int i = 0; i < v.size(); i++) v[i] += w;
     return v;
 }
 
 template <class T>
-vector<T> operator-(const vector<T>& v, const vector<T>& w){  // vector（配列）同士の引き算
+vector<T> operator-(const vector<T>& v, const vector<T>& w) {  // vector（配列）同士の引き算
     vector<T> o = v;
     for (int i = 0; i < o.size(); i++) o[i] -= w[i];
     return o;
 }
 
 template <class T, class U>
-vector<T> operator-(const vector<T>& v, const U& w){  // vector（配列）の各要素と何かの引き算
+vector<T> operator-(const vector<T>& v, const U& w) {  // vector（配列）の各要素と何かの引き算
     vector<T> o = v;
     for (int i = 0; i < o.size(); i++) o[i] -= w;
     return o;
 }
 
 template <class T, class U>
-vector<T> operator*(const vector<T>& v, const U& w){  // vector（配列）の各要素と何かの掛け算
+vector<T> operator*(const vector<T>& v, const U& w) {  // vector（配列）の各要素と何かの掛け算
     vector<T> o = v;
     for (int i = 0; i < o.size(); i++) o[i] *= w;
     return o;
 }
 
 template <class T>
-T sum(vector<T>& v){  // vector（配列）の合計値を求める
+T sum(vector<T>& v) {  // vector（配列）の合計値を求める
     return accumulate(v.begin() + 1, v.end(), v[0]);
 }
 
 template <class T>
-T mean(vector<T>& v){  // vector（配列）の平均値を求める
+T mean(vector<T>& v) {  // vector（配列）の平均値を求める
     return sum(v) / v.size();
 }
 
 template <class T>
-T min_element(vector<T>& v){  // vector（配列）中の最小値を見つける
+T min_element(vector<T>& v) {  // vector（配列）中の最小値を見つける
     return *min_element(v.begin(), v.end());
 }
 
 template <class T>
-T max_element(vector<T>& v){  // vector（配列）中の最大値を見つける
+T max_element(vector<T>& v) {  // vector（配列）中の最大値を見つける
     return *max_element(v.begin(), v.end());
 }
 
@@ -218,7 +221,7 @@ public:
     Matrix3d rotation;  // 回転行列
     
     intersection(Vector3d& vertA0_, Vector3d& vertA1_, Vector3d& vertB0_, Vector3d& vertB1_, Vector3d& vertC0_, Vector3d& vertC1_, Vector3d& p0_, Vector3d& p1_)
-    : vertA0(vertA0_), vertA1(vertA1_), vertB0(vertB0_), vertB1(vertB1_), vertC0(vertC0_), vertC1(vertC1_), p0(p0_), p1(p1_){
+    : vertA0(vertA0_), vertA1(vertA1_), vertB0(vertB0_), vertB1(vertB1_), vertC0(vertC0_), vertC1(vertC1_), p0(p0_), p1(p1_) {
         rotation << 0, -1, 0, 1, 0, 0, 0, 0, 1;
         // z軸を中心に90度回転
         //rotation << 1, 0, 0, 0, 0, -1, 0, 1, 0;
@@ -367,9 +370,9 @@ int collision(mesh& A, mesh& B) {
                                     Vector3d v = velocity;
                                     velocity += n * n.dot((v0 + v1 + v2) / 3) - n * v.dot(n);
                                     
-                                    v0 += n * n.dot(v) - n * v1.dot(n);
+                                    v0 += n * n.dot(v) - n * v0.dot(n);
                                     v1 += n * n.dot(v) - n * v1.dot(n);
-                                    v2 += n * n.dot(v) - n * v1.dot(n);
+                                    v2 += n * n.dot(v) - n * v2.dot(n);
                                 }
                                 return 1;
                             }
@@ -387,7 +390,7 @@ int collision(mesh& A, mesh& B) {
 //
 // currentに最もフィットするようにrestを回転＆平行移動したものをgoalに求める
 //
-vector<Vector3d> computeGoalPositions(mesh& current, mesh& rest){
+vector<Vector3d> computeGoalPositions(mesh& current, mesh& rest) {
     //最初に全部2dを3dに変えた
     
     Vector3d xcm = mean(current.vertices), x0cm = mean(rest.vertices);
@@ -415,7 +418,7 @@ vector<Vector3d> computeGoalPositions(mesh& current, mesh& rest){
 // ------------------------------------------------------------
 // 描画処理を行う関数（繰り返し呼ばれ続ける）
 //
-void display(){
+void display() {
 #if 1
     // ------------------------------------------------------------
     // 重力の作用
@@ -435,7 +438,7 @@ void display(){
     // フィットさせたものをgoalとし、mesh[i]の形状が
     // goalに戻るように各頂点に力を掛ける
     //
-    for (int i = 0; i < meshes.size(); i++){
+    for (int i = 0; i < meshes.size(); i++) {
         mesh temporary = meshes[i];
         
         temporary.vertices += temporary.velocities;  // 現時点の速度で頂点を更新
@@ -455,12 +458,12 @@ void display(){
     // 全ての衝突が解消されるまで、衝突している頂点の速度の修正を繰り返す
     //
     int collided = 1;
-    while (collided){
+    while (collided) {
         collided = 0;
         for (int i = 0; i < meshes.size(); i++)
-            if (!meshes[i].fixed){
-                for (int j = 0; j < meshes.size(); j++){
-                    if (i != j){
+            if (!meshes[i].fixed) {
+                for (int j = 0; j < meshes.size(); j++) {
+                    if (i != j) {
                         // meshes[i]とmeshes[j]の衝突を検査
                         collided = collision(meshes[i], meshes[j]);
                         
@@ -562,8 +565,8 @@ void display(){
 // ------------------------------------------------------------
 // マウスクリックの処理を行う関数（マウスクリックの度に呼ばれる）
 //
-void mouse(int b, int s, int x, int y){
-    if (s == GLUT_DOWN){
+void mouse(int b, int s, int x, int y) {
+    if (s == GLUT_DOWN) {
         oldX = x;
         oldY = y;
         
@@ -576,7 +579,7 @@ void mouse(int b, int s, int x, int y){
 // ------------------------------------------------------------
 // 頂点（vertex）をベクトル（axis）の周りにangle（単位はラジアン）だけ回転させる
 //
-void rotateAroundVector(Vector3d& vertex, Vector3d axis, double angle){
+void rotateAroundVector(Vector3d& vertex, Vector3d axis, double angle) {
     axis.normalize();
     
     double s = sin(angle), c = cos(angle);
@@ -599,7 +602,7 @@ void rotateAroundVector(Vector3d& vertex, Vector3d axis, double angle){
 // ------------------------------------------------------------
 // 姿勢の更新
 //
-void updatePose(double dx, double dy, Vector3d& eye, Vector3d& center, Vector3d& up){
+void updatePose(double dx, double dy, Vector3d& eye, Vector3d& center, Vector3d& up) {
     // 視線ベクトルと上方向ベクトルの外積を計算
     Vector3d inverseEyeshot = eye - center;
     Vector3d cross = inverseEyeshot.cross(up);
@@ -616,8 +619,8 @@ void updatePose(double dx, double dy, Vector3d& eye, Vector3d& center, Vector3d&
 // ------------------------------------------------------------
 // マウスの動きの処理を行う関数（マウスが動く度に呼ばれる）
 //
-void motion(int x, int y){
-    if (0 <= oldX){
+void motion(int x, int y) {
+    if (0 <= oldX) {
         double dx = double(x - oldX) / 100, dy = double(oldY - y) / 100;
         
         if (litMode)
@@ -637,8 +640,8 @@ void motion(int x, int y){
 // ------------------------------------------------------------
 // メイン関数（ここからプログラムの実行が始まる）
 //
-int main(int argc, char* argv[]){
-    meshes.resize(4);
+int main(int argc, char* argv[]) {
+    meshes.resize(5);
     
     // 立方体
     meshes[0].vertices.resize(8);  // 頂点の指定
@@ -695,21 +698,29 @@ int main(int argc, char* argv[]){
     meshes[0].faces[11][1] = Vector3i(0, 0, 5);
     meshes[0].faces[11][2] = Vector3i(2, 0, 5);
     
-    // 大きな球を読み込み
+    //球の読み込み
+#ifdef _WIN32
     meshes[1].loadObj("sphere.obj");
-    
-    // 小さな球を読み込み
     meshes[2].loadObj("sphere.obj");
+    meshes[3].loadObj("sphere.obj");
+    
+#endif
+    
+#ifdef __APPLE__
+    meshes[1].loadObj("~/sphere.obj");
+    meshes[2].loadObj("~/sphere.obj");
+#endif
+    
     
     // 外周の壁となる立方体 (meshes[0]を拡大し、全三角形を裏返す)
-    meshes[3].vertices = meshes[0].vertices * 8;
-    meshes[3].normals = meshes[0].normals * -1;
-    meshes[3].faces = meshes[0].faces;
-    for (int i = 0; i < meshes[3].faces.size(); i++)
+    meshes[4].vertices = meshes[0].vertices * 8;
+    meshes[4].normals = meshes[0].normals * -1;
+    meshes[4].faces = meshes[0].faces;
+    for (int i = 0; i < meshes[4].faces.size(); i++)
         for (int j = 0; j < meshes[3].faces[i].size(); j++)
             // 三角形を裏返す（頂点の並びを逆順にする）
-            meshes[3].faces[i][j] = meshes[0].faces[i][2 - j];
-    meshes[3].fixed = 1;
+            meshes[4].faces[i][j] = meshes[0].faces[i][2 - j];
+    meshes[4].fixed = 1;
     
     rests = meshes;
     
@@ -721,11 +732,14 @@ int main(int argc, char* argv[]){
     // サイズの調整
     meshes[1].vertices = meshes[1].vertices * 2.0;
     meshes[2].vertices = meshes[2].vertices * 0.5;
+    meshes[3].vertices = meshes[2].vertices * 1.0;
     
     // 位置の調整
     meshes[0].vertices += Vector3d(0, 5, 0);
     meshes[1].vertices += Vector3d(3, 5, 1);
     meshes[2].vertices += Vector3d(-4, 5, -3);
+    meshes[3].vertices += Vector3d(4, 5, 3);
+    
     
     glutInit(&argc, argv);
     
@@ -733,7 +747,7 @@ int main(int argc, char* argv[]){
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
 #endif
     
-#ifdef _APPLE_
+#ifdef __APPLE__
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 #endif
     
