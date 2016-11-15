@@ -722,7 +722,7 @@ int main(int argc, char* argv[]) {
 	meshes[4].normals = meshes[0].normals * -1;
 	meshes[4].faces = meshes[0].faces;
 	for (int i = 0; i < meshes[4].faces.size(); i++)
-		for (int j = 0; j < meshes[4].faces[i].size(); j++)
+		for (int j = 0; j < meshes[3].faces[i].size(); j++)
 			// 三角形を裏返す（頂点の並びを逆順にする）
 			meshes[4].faces[i][j] = meshes[0].faces[i][2 - j];
 	meshes[4].fixed = 1;

@@ -744,7 +744,7 @@ int main(int argc, char* argv[]){
 #endif
     
 #ifdef _WIN32
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA]);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
 #endif
     
     glutInitWindowPosition(100, 0);
